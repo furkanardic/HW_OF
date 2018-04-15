@@ -7,12 +7,12 @@ while 1:
             calisma = calisma - 1
         except ValueError:
             print("lütfen bir tam sayı giriniz!!!")
-        veri2 = input("Kaçıncı kuvvetini almak istediğinizi pozitif tam sayı cinsinden giriniz:")
+        veri2 = input("Kaçıncı kuvvetini almak istediğinizi 0 ya da pozitif tam sayı olarak giriniz:")
         try:
             sayi2 = int(veri2)
             calisma = calisma - 1
         except ValueError:
-            print("lütfen pozitif bir tam sayı giriniz!!!")
+            print("lütfen pozitif bir tam sayı veya 0 giriniz!!!")
         silah = 1
         def fonk(at,avrat,silah):
             if avrat == 0:
