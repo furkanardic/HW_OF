@@ -11,3 +11,5 @@ try:
         print("{} currency for {}:".format(second, first), data["result"][0]["Last"], "\nLast time stamp:",data["result"][0]["TimeStamp"])
 except:
     print("Source is not available...Please try another time or make contact with your developer...")
+
+#try,except added for some bugs.
