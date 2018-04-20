@@ -15,4 +15,4 @@ while 1:
             sonuc=sonuc*at
             return fonksiyon(at-1,sonuc)
 
-    print("Cevap",fonksiyon(sayi,sonuc))
+    print("Cevap:",fonksiyon(sayi,sonuc))
