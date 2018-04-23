@@ -1,5 +1,7 @@
 import sys
 from PyQt5 import QtWidgets
+import requests
+
 
 class Window(QtWidgets.QWidget):
 
@@ -13,6 +15,7 @@ class Window(QtWidgets.QWidget):
         self.le2 = QtWidgets.QLineEdit()
         self.b = QtWidgets.QPushButton("Enter")
         self.b2 = QtWidgets.QPushButton("Clear")
+
 
         h_box = QtWidgets.QHBoxLayout()
         h_box.addStretch()
@@ -37,9 +40,21 @@ class Window(QtWidgets.QWidget):
     def bttnclick(self):
         sender = self.sender()
         if sender.text() == "Enter":
-            print(self.le.text())
+            try:
+                url = "https://bittrex.com/api/v1.1/public/getmarkethistory?market={}-{}".format(self.le.text(),self.le2.text())
+                variable = requests.get(url)
+                data = variable.json()
+                if data["success"] == False:
+                    print("Your selections are not accessible.Try another money units or write units in capital letters.\nFor example\nWrong: btc \\ True: BTC")
+                else:
+                    print("Value = {}",data['result'][0])
+            except:
+                print("Please try to contact your developer...")
+
+
         else:
             self.le.clear()
+            self.le2.clear()
 
 app = QtWidgets.QApplication(sys.argv)
 a_window = Window()
