@@ -1,5 +1,6 @@
 import sys
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets,QtGui,QtCore
+from PyQt5.QtWidgets import *
 import requests
 
 
@@ -10,12 +11,12 @@ class Window(QtWidgets.QWidget):
         self.user_gui()
 
     def user_gui(self):
-        self.l =QtWidgets.QLabel("Please enter your units...")
-        self.le = QtWidgets.QLineEdit()
-        self.le2 = QtWidgets.QLineEdit()
+        self.l =QtWidgets.QLabel("Please pick your unit...")
         self.b = QtWidgets.QPushButton("Enter")
-        self.b2 = QtWidgets.QPushButton("Clear")
 
+        listWidget = QListWidget()
+        ls = ['BTC', 'ETH', 'USDT','EXIT']
+        listWidget.addItems(ls)
 
         h_box = QtWidgets.QHBoxLayout()
         h_box.addStretch()
@@ -24,16 +25,13 @@ class Window(QtWidgets.QWidget):
 
         v_box = QtWidgets.QVBoxLayout()
         v_box.addLayout(h_box)
-        v_box.addWidget(self.le)
-        v_box.addWidget(self.le2)
         v_box.addWidget(self.b)
-        v_box.addWidget(self.b2)
+        v_box.addWidget(listWidget)
 
         self.setLayout(v_box)
         self.setWindowTitle("E-Money indexor...")
 
         self.b.clicked.connect(self.bttnclick)
-        self.b2.clicked.connect(self.bttnclick)
 
         self.show()
 
