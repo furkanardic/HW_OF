@@ -4,11 +4,6 @@ import tkinter as tk
 from tkinter import *
 import requests
 import matplotlib.pyplot as plt
-import numpy as np
-import sys
-from matplotlib.backend_bases import key_press_handler
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 
 url = "https://bittrex.com/api/v1.1/public/getmarketsummaries"
 response = requests.get(url)
@@ -33,20 +28,26 @@ def scale():#grafiği çizdiriyoruz.
     plt.plot(times, prices)
     plt.show()
 def graph_datas():#grafik değerlerini x ve y koordinatlarını ayrı ayrı olarak listeye atıyor.
-    global market
-    global money
-    market = Lb4.get("active")
-    money = Lb1.get("active")
-    global prices
-    global times
-    url = "https://bittrex.com/api/v1.1/public/getmarkethistory?market={}-{}".format(market, money)
-    response = requests.get(url)
-    data = response.json()
-    for i in range(len(data["result"])):
-        prices += [data["result"][i]["Price"]]
-        times += [data["result"][i]["TimeStamp"][11:19]]
-    #grafiği çizdiriyoruz.
-    scale()
+    try:
+        global market
+        global money
+        market = Lb4.get("active")
+        money = Lb1.get("active")
+        global prices
+        global times
+        url = "https://bittrex.com/api/v1.1/public/getmarkethistory?market={}-{}".format(market, money)
+        response = requests.get(url)
+        data = response.json()
+        for i in range(len(data["result"])):
+            prices += [data["result"][i]["Price"]]
+            times += [data["result"][i]["TimeStamp"][11:19]]
+        #grafiği çizdiriyoruz.
+        scale()
+    except:
+        error = tk.Label(text='Please firstly choose the market and push the search.')
+        error.config(width=200)
+        error.config(font=("Courier", 15))
+        error.pack()
 def markets():#2.listeleri bastırıyor.
     if (Lb4.get("active")=="BTC")and(btc==0)and(eth==0)and(usdt==0):
         btc_markets()
