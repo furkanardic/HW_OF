@@ -1,8 +1,15 @@
+import matplotlib
+matplotlib.use('TkAgg')
 import tkinter as tk
 from tkinter import *
 import requests
 import matplotlib.pyplot as plt
 import numpy as np
+import sys
+from matplotlib.backend_bases import key_press_handler
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+
 url = "https://bittrex.com/api/v1.1/public/getmarketsummaries"
 response = requests.get(url)
 data = response.json()
@@ -37,7 +44,7 @@ def graph_datas():#grafik değerlerini x ve y koordinatlarını ayrı ayrı olar
     data = response.json()
     for i in range(len(data["result"])):
         prices += [data["result"][i]["Price"]]
-        times += [data["result"][i]["TimeStamp"]]
+        times += [data["result"][i]["TimeStamp"][11:19]]
     #grafiği çizdiriyoruz.
     scale()
 def markets():#2.listeleri bastırıyor.
@@ -48,7 +55,6 @@ def markets():#2.listeleri bastırıyor.
 
     elif (Lb4.get("active")=="USDT")and(btc==0)and(eth==0)and(usdt==0):
         usdt_markets()
-
 def btc_markets():
     global btc
     btc=1
