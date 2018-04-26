@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import *
 import requests
+import matplotlib.pyplot as plt
+import numpy as np
 url = "https://bittrex.com/api/v1.1/public/getmarketsummaries"
 response = requests.get(url)
 data = response.json()
@@ -9,30 +11,44 @@ eth=0
 usdt=0
 market=""
 money=""
-def scale():#grafik değerlerini x ve y koordinatlarını ayrı ayrı olarak listeye atıyor.
+prices=[]
+times=[]
+def scale():#grafiği çizdiriyoruz.
+    global market
+    global money
+    global times
+    global prices
+    title=market+" / "+money
+    plt.title(title)
+    plt.ylabel("Currency")
+    plt.xlabel("Time")
+    plt.grid(True)
+    plt.plot(times, prices)
+    plt.show()
+def graph_datas():#grafik değerlerini x ve y koordinatlarını ayrı ayrı olarak listeye atıyor.
     global market
     global money
     market = Lb4.get("active")
     money = Lb1.get("active")
-    prices = []
-    times = []
+    global prices
+    global times
     url = "https://bittrex.com/api/v1.1/public/getmarkethistory?market={}-{}".format(market, money)
     response = requests.get(url)
     data = response.json()
     for i in range(len(data["result"])):
         prices += [data["result"][i]["Price"]]
         times += [data["result"][i]["TimeStamp"]]
-    for i in range(len(prices)):
-        print(prices[i])
-    for i in range(len(times)):
-        print(times[i][0:19])
+    #grafiği çizdiriyoruz.
+    scale()
 def markets():#2.listeleri bastırıyor.
     if (Lb4.get("active")=="BTC")and(btc==0)and(eth==0)and(usdt==0):
         btc_markets()
     elif (Lb4.get("active")=="ETH")and(btc==0)and(eth==0)and(usdt==0):
         eth_markets()
+
     elif (Lb4.get("active")=="USDT")and(btc==0)and(eth==0)and(usdt==0):
         usdt_markets()
+
 def btc_markets():
     global btc
     btc=1
@@ -86,10 +102,10 @@ button_search.config(width=7)
 button_search.config(font=("Courier",20))
 button_search.place(relx=0.01,rely=0.01)
 
-button_search_currency = tk.Button(screen, text="SEARCH CURRENCY", command=scale)
+button_search_currency = tk.Button(screen, text="SEARCH CURRENCY", command=graph_datas)
 button_search_currency.config(width=20)
-button_search_currency.config(font=("Courier",20))
-button_search_currency.place(relx=0.12,rely=0.01)
+button_search_currency.config(font=("Courier", 20))
+button_search_currency.place(relx=0.12, rely=0.01)
 
 button_exit = tk.Button(text='EXIT', command=screen.destroy)
 button_exit.config(width=5)
