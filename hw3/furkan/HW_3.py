@@ -1,5 +1,5 @@
 import matplotlib
-matplotlib.use('TkAgg')
+matplotlib.use('TkAgg')#grafik penceresi
 import tkinter as tk
 from tkinter import *
 import requests
