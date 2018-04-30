@@ -49,7 +49,7 @@ class Window(QtWidgets.QWidget):
     def bttnclick(self):
         sender = self.sender()
         if sender.text() == "Enter":
-            #try:
+            try:
                 url = "https://bittrex.com/api/v1.1/public/getmarkethistory?market={}-{}".format(self.listWidget.currentItem().text(),self.listWidget2.currentItem().text())
                 variable = requests.get(url)
                 data = variable.json()
@@ -69,8 +69,8 @@ class Window(QtWidgets.QWidget):
                     plt.xscale('linear')
                     plt.show()
 
-           # except:
-            #    print("Please try to contact your developer...")
+            except:
+                print("Please try to contact your developer...")
 
 
     def baron(self):
