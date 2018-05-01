@@ -1,7 +1,8 @@
 import sys
-from PyQt5 import QtWidgets,QtGui,QtCore
+from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtWidgets import *
 import requests
+import matplotlib.pyplot as plt
 
 unit_1="BTC"
 unit_2="ETH"
@@ -35,11 +36,12 @@ class Window(QtWidgets.QWidget):
         v_box.addWidget(self.listWidget)
         v_box.addWidget(self.listWidget2)
 
+
+
         self.setLayout(v_box)
         self.setWindowTitle("E-Money indexor...")
 
         self.listWidget.itemClicked.connect(self.baron)
-        self.listWidget2.itemClicked.connect(self.reaction)
         self.b.clicked.connect(self.bttnclick)
 
         self.show()
@@ -48,13 +50,25 @@ class Window(QtWidgets.QWidget):
         sender = self.sender()
         if sender.text() == "Enter":
             try:
-                url = "https://bittrex.com/api/v1.1/public/getmarkethistory?market={}-{}".format()
+                url = "https://bittrex.com/api/v1.1/public/getmarkethistory?market={}-{}".format(self.listWidget.currentItem().text(),self.listWidget2.currentItem().text())
                 variable = requests.get(url)
                 data = variable.json()
                 if data["success"] == False:
-                    print("Your selections are not accessible.Try another money units or write units in capital letters.\nFor example\nWrong: btc \\ True: BTC")
+                    print("Source is not accessible!!!")
                 else:
-                    print("Value = {}",data['result'][0])
+                    list1 = []
+                    list2 = []
+                    for i in range(len(data["result"])):
+                        list1 = list1 + [data["result"][i]["TimeStamp"][11:19]]
+                        list2 = list2 + [data['result'][i]["Price"]]
+                    plt.plot(list1,list2)
+                    plt.ylabel("Price")
+                    plt.xlabel("Time - Almost 20 Minutes")
+                    plt.grid(True)
+                    plt.yscale('linear')
+                    plt.xscale('linear')
+                    plt.show()
+
             except:
                 print("Please try to contact your developer...")
 
@@ -81,11 +95,6 @@ class Window(QtWidgets.QWidget):
                 if info["result"][i]["MarketName"][0] == "U":
                     self.listWidget2.addItem(info["result"][i]["MarketName"][5:11])
 
-    def reaction(self):
-        global anti
-        helper = self.listWidget2.currentItem()
-        anti = helper.text()
-        print(anti)
 
 
 

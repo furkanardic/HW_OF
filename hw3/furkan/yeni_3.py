@@ -1,3 +1,5 @@
+import _thread
+import time
 import matplotlib
 matplotlib.use('TkAgg')#grafik penceresi
 import tkinter as tk
@@ -27,6 +29,32 @@ def scale():#grafiği çizdiriyoruz.
     plt.grid(True)
     plt.plot(times, prices)
     plt.show()
+def now():
+    try:
+        global market
+        global money
+        market = Lb4.get("active")
+        money = Lb1.get("active")
+        global prices
+        global times
+        url = "https://bittrex.com/api/v1.1/public/getmarkethistory?market={}-{}".format(market, money)
+        response = requests.get(url)
+        data = response.json()
+        i=100
+        while i==100:
+            try:
+                time.sleep(5)
+                prices += [data["result"][i]["Price"]]
+                times += [data["result"][i]["TimeStamp"][11:19]]
+            except IndexError:
+                continue
+        #grafiği çizdiriyoruz.
+        scale()
+    except:
+        error = tk.Label(text='Please firstly choose the market and push the search.')
+        error.config(width=200)
+        error.config(font=("Courier", 15))
+        error.pack()
 def graph_datas():#grafik değerlerini x ve y koordinatlarını ayrı ayrı olarak listeye atıyor.
     try:
         global market
@@ -119,6 +147,8 @@ button_exit.config(width=5)
 button_exit.config(font=("Courier",20))
 button_exit.place(relx=0.92,rely=0.92)
 
+_thread.start_new_thread( now, () )
+
 Lb4 = Listbox(screen)
 Lb4.insert(1,"BTC")
 Lb4.insert(2,"ETH")
@@ -128,3 +158,4 @@ Lb4.config(font=("Courier",25))
 Lb4.pack(side=LEFT , fill=BOTH)
 
 screen.mainloop()
+
