@@ -1,8 +1,13 @@
 import sys
+import time
+import threading
 from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtWidgets import *
 import requests
+import matplotlib
+matplotlib.use("Qt5Agg")
 import matplotlib.pyplot as plt
+
 
 unit_1="BTC"
 unit_2="ETH"
@@ -35,8 +40,6 @@ class Window(QtWidgets.QWidget):
         v_box.addWidget(self.b)
         v_box.addWidget(self.listWidget)
         v_box.addWidget(self.listWidget2)
-
-
 
         self.setLayout(v_box)
         self.setWindowTitle("E-Money indexor...")
@@ -94,9 +97,6 @@ class Window(QtWidgets.QWidget):
             for i in range(len(info["result"])):
                 if info["result"][i]["MarketName"][0] == "U":
                     self.listWidget2.addItem(info["result"][i]["MarketName"][5:11])
-
-
-
 
 
 
