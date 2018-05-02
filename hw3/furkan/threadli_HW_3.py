@@ -104,25 +104,27 @@ def usdt_markets():
     Lb1.config(width=8)
     Lb1.config(font=("Courier",20))
     Lb1.pack(side=LEFT , fill=BOTH)
-def ase():
+def now():
     #bu yapilan grafikte olan verileri 30 sn arayla çekmeye yapiyor ve çalişiyormu diye yapılmıs bır prototiptir.
     global money
     global market
     prices=[]
     times=[]
-    a=0
-    while a<5:
-        a = a + 1
+    while 1:
         time.sleep(30)
         url = "https://bittrex.com/api/v1.1/public/getmarkethistory?market={}-{}".format(market, money)
         response = requests.get(url)
         data = response.json()
         times = []
+        prices = []
         for i in range(len(data["result"])):
             prices += [data["result"][i]["Price"]]
             times += [data["result"][i]["TimeStamp"][11:19]]
         print(times[0])
+        print(times[1])
+        print(times[2])
         print(times[99])
+        print(len(times))
 def gui():
     global data
     global btc
@@ -161,7 +163,7 @@ def gui():
         Lb4.config(width=7)#en
         Lb4.config(font=("Courier",25))
         Lb4.pack(side=LEFT , fill=BOTH)
-        _thread.start_new_thread(ase, ())
+        _thread.start_new_thread(now, ())
         _thread.start_new_thread(screen.mainloop(), ())
     except:
         print("Error: unable to start thread")
