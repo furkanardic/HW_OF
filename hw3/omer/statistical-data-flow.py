@@ -33,10 +33,18 @@ class refresh(threading.Thread):
                 for i in range(len(self.data["result"])):
                     self.list1 = self.list1 + [self.data["result"][i]["TimeStamp"][11:19]]
                     self.list2 = self.list2 + [self.data['result'][i]["Price"]]
-                    plt.plot(self.list1, self.list2)
-                    plt.yscale('linear')
-                    plt.xscale('linear')
-            time.sleep(1)
+                plt.clf()
+                plt.grid(False)
+                plt.plot(self.list1, self.list2)
+                plt.ylabel("Price")
+                plt.xlabel("Time - Almost 20 Minutes")
+                plt.grid(True)
+                plt.yscale('linear')
+                plt.xscale('linear')
+                plt.draw()
+                plt.pause(0.01)
+
+            time.sleep(0.01)
 
 
 class Window(QtWidgets.QWidget):
@@ -88,13 +96,13 @@ class Window(QtWidgets.QWidget):
         sender = self.sender()
         if sender.text() == "Enter":
             try:
-                self.thread = refresh(self.listWidget.currentItem().text(), self.listWidget2.currentItem().text())
-                self.thread.start()
-                plt.show()
-                plt.cla()
+                plt.clf()
                 plt.ylabel("Price")
                 plt.xlabel("Time - Almost 20 Minutes")
                 plt.grid(True)
+                plt.show()
+                self.thread = refresh(self.listWidget.currentItem().text(), self.listWidget2.currentItem().text())
+                self.thread.start()
 
             except:
                 self.l.setText("Please try to contact your developer...")
