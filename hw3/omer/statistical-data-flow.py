@@ -13,85 +13,92 @@ unit_1="BTC"
 unit_2="ETH"
 unit_3="USDT"
 
-class PhotoViewer(QtWidgets.QGraphicsView):
-    photoClicked = QtCore.pyqtSignal(QtCore.QPoint)
 
-    def __init__(self, parent):
-        super(PhotoViewer, self).__init__(parent)
-        self._zoom = 0
-        self._empty = True
-        self._scene = QtWidgets.QGraphicsScene(self)
-        self._photo = QtWidgets.QGraphicsPixmapItem()
-        self._scene.addItem(self._photo)
-        self.setScene(self._scene)
-        self.setTransformationAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
-        self.setResizeAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
-        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.setBackgroundBrush(QtGui.QBrush(QtGui.QColor(30, 30, 30)))
-        self.setFrameShape(QtWidgets.QFrame.NoFrame)
+class ZoomPan:
+    def __init__(self):
+        self.press = None
+        self.cur_xlim = None
+        self.cur_ylim = None
+        self.x0 = None
+        self.y0 = None
+        self.x1 = None
+        self.y1 = None
+        self.xpress = None
+        self.ypress = None
 
-    def hasPhoto(self):
-        return not self._empty
+    def zoom_factory(self, ax, base_scale=2.):
+        def zoom(event):
+            cur_xlim = ax.get_xlim()
+            cur_ylim = ax.get_ylim()
 
-    def fitInView(self, scale=True):
-        rect = QtCore.QRectF(self._photo.pixmap().rect())
-        if not rect.isNull():
-            self.setSceneRect(rect)
-            if self.hasPhoto():
-                unity = self.transform().mapRect(QtCore.QRectF(0, 0, 1, 1))
-                self.scale(1 / unity.width(), 1 / unity.height())
-                viewrect = self.viewport().rect()
-                scenerect = self.transform().mapRect(rect)
-                factor = min(viewrect.width() / scenerect.width(),
-                             viewrect.height() / scenerect.height())
-                self.scale(factor, factor)
-            self._zoom = 0
+            xdata = event.xdata  # get event x location
+            ydata = event.ydata  # get event y location
 
-    def setPhoto(self, pixmap=None):
-        self._zoom = 0
-        if pixmap and not pixmap.isNull():
-            self._empty = False
-            self.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
-            self._photo.setPixmap(pixmap)
-        else:
-            self._empty = True
-            self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
-            self._photo.setPixmap(QtCore.QPixmap())
-        self.fitInView()
-
-    def wheelEvent(self, event):
-        if self.hasPhoto():
-            if event.angleDelta().y() > 0:
-                factor = 1.25
-                self._zoom += 1
+            if event.button == 'down':
+                # deal with zoom in
+                scale_factor = 1 / base_scale
+            elif event.button == 'up':
+                # deal with zoom out
+                scale_factor = base_scale
             else:
-                factor = 0.8
-                self._zoom -= 1
-            if self._zoom > 0:
-                self.scale(factor, factor)
-            elif self._zoom == 0:
-                self.fitInView()
-            else:
-                self._zoom = 0
+                # deal with something that should never happen
+                scale_factor = 1
+            #         print event.button
 
-    def toggleDragMode(self):
-        if self.dragMode() == QtWidgets.QGraphicsView.ScrollHandDrag:
-            self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
-        elif not self._photo.pixmap().isNull():
-            self.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
+            new_width = (cur_xlim[1] - cur_xlim[0]) * scale_factor
+            new_height = (cur_ylim[1] - cur_ylim[0]) * scale_factor
 
-    def mousePressEvent(self, event):
-        if self._photo.isUnderMouse():
-            self.photoClicked.emit(QtCore.QPoint(event.pos()))
-        super(PhotoViewer, self).mousePressEvent(event)
+            relx = (cur_xlim[1] - xdata) / (cur_xlim[1] - cur_xlim[0])
+            rely = (cur_ylim[1] - ydata) / (cur_ylim[1] - cur_ylim[0])
+
+            ax.set_xlim([xdata - new_width * (1 - relx), xdata + new_width * (relx)])
+            ax.set_ylim([ydata - new_height * (1 - rely), ydata + new_height * (rely)])
+            ax.figure.canvas.draw()
+
+        fig = ax.get_figure()  # get the figure of interest
+        fig.canvas.mpl_connect('scroll_event', zoom)
+
+        return zoom
+
+    def pan_factory(self, ax):
+        def onPress(event):
+            if event.inaxes != ax: return
+            self.cur_xlim = ax.get_xlim()
+            self.cur_ylim = ax.get_ylim()
+            self.press = self.x0, self.y0, event.xdata, event.ydata
+            self.x0, self.y0, self.xpress, self.ypress = self.press
+
+        def onRelease(event):
+            self.press = None
+            ax.figure.canvas.draw()
+
+        def onMotion(event):
+            if self.press is None: return
+            if event.inaxes != ax: return
+            dx = event.xdata - self.xpress
+            dy = event.ydata - self.ypress
+            self.cur_xlim -= dx
+            self.cur_ylim -= dy
+            ax.set_xlim(self.cur_xlim)
+            ax.set_ylim(self.cur_ylim)
+
+            ax.figure.canvas.draw()
+
+        fig = ax.get_figure()  # get the figure of interest
+
+        # attach the call back
+        fig.canvas.mpl_connect('button_press_event', onPress)
+        fig.canvas.mpl_connect('button_release_event', onRelease)
+        fig.canvas.mpl_connect('motion_notify_event', onMotion)
+
+        # return the function
+        return onMotion
 
 class refresh(threading.Thread):
     def __init__(self, value1, value2):
         threading.Thread.__init__(self)
         self.value1 = value1
         self.value2 = value2
-        self.viewer = PhotoViewer(self)
     def run(self):
         while 1:
             self.url = "https://bittrex.com/api/v1.1/public/getmarkethistory?market={}-{}".format(self.value1, self.value2)
@@ -108,7 +115,6 @@ class refresh(threading.Thread):
                     self.list1 = self.list1 + [self.data["result"][i]["TimeStamp"][11:19]]
                     self.list2 = self.list2 + [self.data['result'][i]["Price"]]
                 plt.clf()
-                self.viewer(plt)
                 plt.grid(False)
                 plt.plot(self.list1, self.list2)
                 plt.ylabel("Price")
@@ -126,6 +132,8 @@ class Window(QtWidgets.QWidget):
 
     def __init__(self):
         super().__init__()
+        self.fig = plt.figure()
+        self.ax = self.fig.add_subplot(111)
         self.user_gui()
 
     def user_gui(self):
@@ -171,10 +179,15 @@ class Window(QtWidgets.QWidget):
         sender = self.sender()
         if sender.text() == "Enter":
             try:
+                scale = 1.1
+                zp = ZoomPan()
                 plt.clf()
                 plt.ylabel("Price")
                 plt.xlabel("Time - Almost 20 Minutes")
                 plt.grid(True)
+                zp.zoom_factory(self.ax, base_scale=scale)
+                zp.pan_factory(self.ax)
+                plt.xticks(rotation=20)
                 plt.show()
                 self.thread = refresh(self.listWidget.currentItem().text(), self.listWidget2.currentItem().text())
                 self.thread.start()
