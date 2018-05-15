@@ -13,11 +13,85 @@ unit_1="BTC"
 unit_2="ETH"
 unit_3="USDT"
 
+class PhotoViewer(QtWidgets.QGraphicsView):
+    photoClicked = QtCore.pyqtSignal(QtCore.QPoint)
+
+    def __init__(self, parent):
+        super(PhotoViewer, self).__init__(parent)
+        self._zoom = 0
+        self._empty = True
+        self._scene = QtWidgets.QGraphicsScene(self)
+        self._photo = QtWidgets.QGraphicsPixmapItem()
+        self._scene.addItem(self._photo)
+        self.setScene(self._scene)
+        self.setTransformationAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
+        self.setResizeAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.setBackgroundBrush(QtGui.QBrush(QtGui.QColor(30, 30, 30)))
+        self.setFrameShape(QtWidgets.QFrame.NoFrame)
+
+    def hasPhoto(self):
+        return not self._empty
+
+    def fitInView(self, scale=True):
+        rect = QtCore.QRectF(self._photo.pixmap().rect())
+        if not rect.isNull():
+            self.setSceneRect(rect)
+            if self.hasPhoto():
+                unity = self.transform().mapRect(QtCore.QRectF(0, 0, 1, 1))
+                self.scale(1 / unity.width(), 1 / unity.height())
+                viewrect = self.viewport().rect()
+                scenerect = self.transform().mapRect(rect)
+                factor = min(viewrect.width() / scenerect.width(),
+                             viewrect.height() / scenerect.height())
+                self.scale(factor, factor)
+            self._zoom = 0
+
+    def setPhoto(self, pixmap=None):
+        self._zoom = 0
+        if pixmap and not pixmap.isNull():
+            self._empty = False
+            self.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
+            self._photo.setPixmap(pixmap)
+        else:
+            self._empty = True
+            self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
+            self._photo.setPixmap(QtCore.QPixmap())
+        self.fitInView()
+
+    def wheelEvent(self, event):
+        if self.hasPhoto():
+            if event.angleDelta().y() > 0:
+                factor = 1.25
+                self._zoom += 1
+            else:
+                factor = 0.8
+                self._zoom -= 1
+            if self._zoom > 0:
+                self.scale(factor, factor)
+            elif self._zoom == 0:
+                self.fitInView()
+            else:
+                self._zoom = 0
+
+    def toggleDragMode(self):
+        if self.dragMode() == QtWidgets.QGraphicsView.ScrollHandDrag:
+            self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
+        elif not self._photo.pixmap().isNull():
+            self.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
+
+    def mousePressEvent(self, event):
+        if self._photo.isUnderMouse():
+            self.photoClicked.emit(QtCore.QPoint(event.pos()))
+        super(PhotoViewer, self).mousePressEvent(event)
+
 class refresh(threading.Thread):
     def __init__(self, value1, value2):
         threading.Thread.__init__(self)
         self.value1 = value1
         self.value2 = value2
+        self.viewer = PhotoViewer(self)
     def run(self):
         while 1:
             self.url = "https://bittrex.com/api/v1.1/public/getmarkethistory?market={}-{}".format(self.value1, self.value2)
@@ -34,6 +108,7 @@ class refresh(threading.Thread):
                     self.list1 = self.list1 + [self.data["result"][i]["TimeStamp"][11:19]]
                     self.list2 = self.list2 + [self.data['result'][i]["Price"]]
                 plt.clf()
+                self.viewer(plt)
                 plt.grid(False)
                 plt.plot(self.list1, self.list2)
                 plt.ylabel("Price")
@@ -42,9 +117,9 @@ class refresh(threading.Thread):
                 plt.yscale('linear')
                 plt.xscale('linear')
                 plt.draw()
-                plt.pause(0.01)
+                #plt.pause(0.1)
 
-            time.sleep(0.01)
+            time.sleep(0.1)
 
 
 class Window(QtWidgets.QWidget):
@@ -129,7 +204,6 @@ class Window(QtWidgets.QWidget):
             for i in range(len(info["result"])):
                 if info["result"][i]["MarketName"][0] == "U":
                     self.listWidget2.addItem(info["result"][i]["MarketName"][5:11])
-
 
 
 app = QtWidgets.QApplication(sys.argv)
