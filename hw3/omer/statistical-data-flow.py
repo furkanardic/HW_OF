@@ -99,7 +99,12 @@ class refresh(threading.Thread):
         threading.Thread.__init__(self)
         self.value1 = value1
         self.value2 = value2
+        self.fig = plt.figure()
+        interesting = Window()
+        self.ax = interesting.ax
     def run(self):
+        scale = 1.1
+        zp = ZoomPan()
         while 1:
             self.url = "https://bittrex.com/api/v1.1/public/getmarkethistory?market={}-{}".format(self.value1, self.value2)
             self.variable = requests.get(self.url)
@@ -122,10 +127,14 @@ class refresh(threading.Thread):
                 plt.grid(True)
                 plt.yscale('linear')
                 plt.xscale('linear')
+                zp.zoom_factory(self.ax, base_scale=scale)
+                zp.pan_factory(self.ax)
+                plt.xticks(rotation=20)
                 plt.draw()
                 #plt.pause(0.1)
 
             time.sleep(0.1)
+
 
 
 class Window(QtWidgets.QWidget):
