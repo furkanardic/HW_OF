@@ -100,8 +100,6 @@ class refresh(threading.Thread):
         self.value1 = value1
         self.value2 = value2
         self.fig = plt.figure()
-        interesting = Window()
-        self.ax = interesting.ax
     def run(self):
         scale = 1.1
         zp = ZoomPan()
@@ -127,8 +125,6 @@ class refresh(threading.Thread):
                 plt.grid(True)
                 plt.yscale('linear')
                 plt.xscale('linear')
-                zp.zoom_factory(self.ax, base_scale=scale)
-                zp.pan_factory(self.ax)
                 plt.xticks(rotation=20)
                 plt.draw()
                 #plt.pause(0.1)
@@ -194,8 +190,8 @@ class Window(QtWidgets.QWidget):
                 plt.ylabel("Price")
                 plt.xlabel("Time - Almost 20 Minutes")
                 plt.grid(True)
-                zp.zoom_factory(self.ax, base_scale=scale)
-                zp.pan_factory(self.ax)
+                zp.zoom_factory(plt.gca(), base_scale=scale)
+                zp.pan_factory(plt.gca())
                 plt.xticks(rotation=20)
                 plt.show()
                 self.thread = refresh(self.listWidget.currentItem().text(), self.listWidget2.currentItem().text())
