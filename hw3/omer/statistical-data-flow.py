@@ -12,7 +12,8 @@ exitFlag = 0
 unit_1="BTC"
 unit_2="ETH"
 unit_3="USDT"
-
+last_xlim=[]
+last_ylim=[]
 
 class ZoomPan:
     def __init__(self):
@@ -28,6 +29,7 @@ class ZoomPan:
 
     def zoom_factory(self, ax, base_scale=2.):
         def zoom(event):
+            global last_xlim, last_ylim
             cur_xlim = ax.get_xlim()
             cur_ylim = ax.get_ylim()
 
@@ -50,9 +52,12 @@ class ZoomPan:
 
             relx = (cur_xlim[1] - xdata) / (cur_xlim[1] - cur_xlim[0])
             rely = (cur_ylim[1] - ydata) / (cur_ylim[1] - cur_ylim[0])
+            
+            last_xlim=[xdata - new_width * (1 - relx), xdata + new_width * (relx)]
+            last_ylim=[ydata - new_height * (1 - rely), ydata + new_height * (rely)]
 
-            ax.set_xlim([xdata - new_width * (1 - relx), xdata + new_width * (relx)])
-            ax.set_ylim([ydata - new_height * (1 - rely), ydata + new_height * (rely)])
+            ax.set_xlim(last_xlim)
+            ax.set_ylim(last_ylim)
             ax.figure.canvas.draw()
 
         fig = ax.get_figure()  # get the figure of interest
@@ -103,6 +108,7 @@ class refresh(threading.Thread):
     def run(self):
         scale = 1.1
         zp = ZoomPan()
+        global last_xlim, last_ylim
         while 1:
             self.url = "https://bittrex.com/api/v1.1/public/getmarkethistory?market={}-{}".format(self.value1, self.value2)
             self.variable = requests.get(self.url)
@@ -125,11 +131,18 @@ class refresh(threading.Thread):
                 plt.grid(True)
                 plt.yscale('linear')
                 plt.xscale('linear')
+                if last_xlim != [] and last_ylim!=[]:
+                    print(last_xlim)
+                    print(last_ylim)
+                    plt.xlim(last_xlim)
+                    plt.ylim(last_ylim)
                 plt.xticks(rotation=20)
                 plt.draw()
+                zp.zoom_factory(plt.gca(), base_scale=scale)
+                #zp.pan_factory(plt.gca())
                 #plt.pause(0.1)
 
-            time.sleep(0.1)
+            time.sleep(1)
 
 
 
@@ -191,7 +204,7 @@ class Window(QtWidgets.QWidget):
                 plt.xlabel("Time - Almost 20 Minutes")
                 plt.grid(True)
                 zp.zoom_factory(plt.gca(), base_scale=scale)
-                zp.pan_factory(plt.gca())
+                #zp.pan_factory(plt.gca())
                 plt.xticks(rotation=20)
                 plt.show()
                 self.thread = refresh(self.listWidget.currentItem().text(), self.listWidget2.currentItem().text())
